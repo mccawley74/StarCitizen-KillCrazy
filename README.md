@@ -9,13 +9,13 @@ set back up.
 
 I had intended to add the T.Flight Rudder Pedals to this profile, but for some reason they
 refuse to work. You may have better luck, simple delete or comment out the line
-Configure(&TFRPRudder, MODE_EXCLUDED); in the StarCitizenXXX.tmc file to use them in the
+```Configure(&TFRPRudder, MODE_EXCLUDED);``` in the StarCitizenXXX.tmc file to use them in the
 profile. Mine seem to work for about 20 seconds then stop responding, so I just left them out
 of the profile and load as a second controller in Star Citizen.
 
 There are several special layers, and function to assist in getting all the commands I wanted.
-They include the Joystick button S4, and the Throttle boat switch. Setup is shown below
-    SetShiftButton(&Joystick, S4, &Throttle, BSF, BSB, 0);
+They include the Joystick button S4, and the Throttle boat switch.
+```SetShiftButton(&Joystick, S4, &Throttle, BSF, BSB, 0);``` Setup is shown below
    
 ### Modifier One: Joystick button S4
 
@@ -55,11 +55,15 @@ This changes the bindings for ```HAT(1) and HAT(3)```
 
 ### Modifier Three: Throttle button
 Pressing "Autopilot engage/disengage" button on the throttle will enter into "Landing Mode"
-This will deploy the landing gear, turn on exterior ship lights, and rebind a joystick HAT(3)
+This will deploy the landing gear, turn on exterior ship lights, and rebinds joystick HAT(3)
 for strafe forward and backward. This makes ```HAT(3) and HAT(2)``` able to strafe the ship all
 six directions for easier landing and maneuvering.
 Pressing the button again will retract the landing gear, turn off external ship lights, and
 rebind ```Joystic HAT(3)``` back to default
+
+NOTE: There is also a seperate switch ```APU Start switch``` that is used for External ship lights.
+This switch and the Landing Mode button track the state of the lights. e.g if the lights were
+switched on then Landing mode was used, it would not turn the lights off when gear was retracted.
 
 ### Modifier Four: Throttle pinkey switch
 The Throttle pinky switch also acts as a modifier (Camera Mode) in that when switched to the back position
@@ -79,10 +83,6 @@ Joystick HAT's to strafe the ship. landings becomes real easy this way.
 Well, thats about it for the special binding stuff. Most of the rest of the bindings are pretty self
 explanatory in the bindings file comments.
 
-I can't take full credit for this profile as I used a lot of code snippits from aboutFlash's profile
-He has a pretty good Star Citizen profile and a lot of documentation, you can check out his code here
-https://github.com/aboutflash/StarCitizen-WarthogScript
-
 ### Joystick and Throttle Mapping
 Here is the Joystick and Throttle mappings for quick reference.
 
@@ -91,6 +91,10 @@ Here is the Joystick and Throttle mappings for quick reference.
 
 #### Throttle Mappings
 ![Throttle Mappings](Throttle_Map.png "Warthog Throttle")
+
+I can't take full credit for this profile as I used a lot of code snippits from aboutFlash's profile
+He has a pretty good Star Citizen profile and a lot of documentation, you can check out his code here
+https://github.com/aboutflash/StarCitizen-WarthogScript
 
 Hope you find it useful!
 McCawley74
