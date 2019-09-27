@@ -92,6 +92,9 @@ Here is the Joystick and Throttle mappings for quick reference.
 #### Throttle Mappings
 ![Throttle Mappings](Throttle_Map.png "Warthog Throttle")
 
+### Kill Crazy at RSI
+https://robertsspaceindustries.com/orgs/KILLCAZY
+
 I can't take full credit for this profile as I used a lot of code snippits from aboutFlash's profile
 He has a pretty good Star Citizen profile and a lot of documentation, you can check out his code here
 https://github.com/aboutflash/StarCitizen-WarthogScript
