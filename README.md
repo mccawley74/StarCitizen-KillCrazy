@@ -1,5 +1,5 @@
 # StarCitizen-KillCrazy
-Star citizen "Thustmaster Target" profile for the Warthog HOTAS
+#### Star citizen "Thustmaster Target" script for the HOTAS Warthog
 
 This is a simple Target profile I made for the Thrustmaster Warthog to use in Star Citizen.
 Most of the bindings are pretty simple, and consists of one to one mapping of the button
