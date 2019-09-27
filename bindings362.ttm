@@ -124,6 +124,8 @@ define Cycle_Pinned_Toggle		PULSE + USB[0x21] 	// 4 key
 define Cycle_Friendly_Toggle	PULSE + USB[0x22] 	// 5 key
 define TrackIRPause_Toggle      PULSE + USB[0x49]	// Insert key
 define TrackIRRecenter_Toggle   PULSE + USB[0x4c]	// Delete key
+// Target_Nearest_Hostile		L_ALT + '1' 		// Uses joystick modifier S3
+// Pin_Target_Focus				HOLD + '1' 			// Press and hold
 // Target_Sub_System_Back		L_ALT + '2' 		// Uses joystick modifier S3
 // Target_Sub_System_Reset		HOLD + '2' 			// Press and hold
 // Cycle_Hostiles_Toggle_Back	L_ALT + '3' 		// Uses joystick modifier S3

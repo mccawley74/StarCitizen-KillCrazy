@@ -61,7 +61,7 @@ int main()
 	SetKBRate(32, 50);
 	SetKBLayout(KB_ENG);
 	
-	// Set the Boat Switch as the U/M/D layer switch
+	// Set the Joystick button for a modifier
 	SetShiftButton(&Joystick, S4, &Throttle, BSF, BSB, 0);
 	
 	// Initialize variables used in functions
