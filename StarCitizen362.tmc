@@ -1,0 +1,638 @@
+//-----------------------------------------------------------------------------
+//    Thrustmaster Warthog Script for Star Citizen 3.6.2
+//    Copyright (C) 2019 Kill Crazy
+//    
+//    This program is free software: you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation, either version 3 of the License, or
+//    (at your option) any later version.
+//
+//    This program is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU General Public License for more details.
+//
+//    You should have received a copy of the GNU General Public License
+//    along with this program.  If not, see <http://www.gnu.org/licenses/>
+//-----------------------------------------------------------------------------
+
+include "target.tmh"
+include "bindings362.ttm"
+
+int log_level = 1;
+int delay_ms = 200;
+float AxisValue;
+alias scVersion = "Alpha 3.6.2";
+char isAfterburnerOn;
+char isCameraModeOn;
+char isLandingGearDown;
+char lightsOnByGear;
+char lightsOnBySwitch;
+	
+//--------------------------------------------------------------------
+// Program Startup
+//--------------------------------------------------------------------
+int main()
+{
+	// Main entry point for the script
+	//
+    // Parameters:
+	//
+    // Returns:
+    
+	printf("\x0aStartCitizen %s Thrustmaster Warthog Profile\x0a", &scVersion);
+	
+	if (log_level > 0)
+		printf("Logging: log_level set to %d\x0a\x0a", log_level);
+	
+	Configure(&HCougar, MODE_EXCLUDED);
+	Configure(&JoystickF18, MODE_EXCLUDED);
+	Configure(&T16000, MODE_EXCLUDED);
+	Configure(&T16000L, MODE_EXCLUDED);
+	Configure(&LMFD, MODE_EXCLUDED);
+	Configure(&RMFD, MODE_EXCLUDED);
+	Configure(&TFRPRudder, MODE_EXCLUDED);
+	Configure(&TWCSThrottle, MODE_EXCLUDED);
+	Configure(&TFRPHARudder, MODE_EXCLUDED);
+	
+    if(Init(&EventHandle)) return 1;
+
+	// Initialize keyboard
+	SetKBRate(32, 50);
+	SetKBLayout(KB_ENG);
+	
+	// Set the Boat Switch as the U/M/D layer switch
+	SetShiftButton(&Joystick, S4, &Throttle, BSF, BSB, 0);
+	
+	// Initialize variables used in functions
+	isAfterburnerOn = 0;
+	isCameraModeOn = 0;
+	isLandingGearDown = 1;
+	lightsOnByGear = 0;
+	lightsOnBySwitch = 0;
+	
+	// Call all mapping functions
+	loadAllMappings();
+	initializeLighting();
+	initializeSoftware();
+}
+
+//--------------------------------------------------------------------
+// Event Handler
+//--------------------------------------------------------------------
+int EventHandle(int type, alias o, int x)
+{
+	// Script event handler
+	//
+    // Parameters:
+	//	int type:
+	//	alias o:
+	//	int x:
+	//
+    // Returns:
+    
+	if (log_level > 1)
+		printf("--> EventHandle: %i\x0a", x);
+	
+	// Engage afterburner if throttle is at 100%
+	AxisValue = Throttle[THR_RIGHT];
+	if (AxisValue > 32439) {
+		if (isAfterburnerOn == 0) {
+    		ActKey(KEYON + DOWN + L_SHIFT);
+    		BlinkAfterburner();
+    		isAfterburnerOn = 1;
+			if (log_level > 0)
+				printf(">> AFTERBURNER <<\x0a");
+    	}
+	} else {
+		if (isAfterburnerOn == 1) {
+    		ActKey(KEYON + UP + L_SHIFT);
+    		StopAutoRepeat(AfterburnerRIDX);
+    		isAfterburnerOn = 0;
+			if (log_level > 0)
+				printf(">> CRUSE <<\x0a");
+    	}
+	}
+	
+    DefaultMapping(&o, x);
+}
+
+//--------------------------------------------------------------------
+// Region Function
+//--------------------------------------------------------------------
+int loadAllMappings()
+{
+	// This function calls each mapping function
+	//
+    // Parameters:
+	//
+    // Returns:
+    
+	if (log_level > 0)
+		printf("Initialize mappings:\x0a");
+	
+	throttle_maps();
+	rudder_maps();
+	joystick_maps();	
+	hat_1_maps();
+	hat_2_maps();
+	hat_3_maps();
+	hat_4_maps();
+}
+
+//--------------------------------------------------------------------
+//	Warthog Rudder Mapping
+//--------------------------------------------------------------------
+int rudder_maps()
+{
+	// This function sets up the TFRPRudder pendals from Thrustmaster
+	//
+    // Parameters:
+	//
+    // Returns:
+    
+	if (log_level > 0)
+		printf("... Initializing Rudder:\x0a");
+	
+	// All commented out as I have not been able to get the rudder pedals to
+	// work in the Target software. They sometimes work, but after about
+	// 30 seconds, they stop responding. If anyone can fix that would be great!
+	//
+	// MapAxis(&TFRPRudder, TRPRIGHT, DX_XROT_AXIS, AXIS_NORMAL, MAP_ABSOLUTE);
+	// SetSCurve(&TFRPRudder, TRPRIGHT, 0, 0, 0, 0, 0);
+	// MapAxis(&TFRPRudder, TRUDDER, DX_Z_AXIS, AXIS_NORMAL, MAP_ABSOLUTE);
+	// SetSCurve(&TFRPRudder, TRUDDER, 0, 0, 0, 0, 0);
+	// MapAxis(&TFRPRudder, TRPLEFT, DX_YROT_AXIS, AXIS_NORMAL, MAP_ABSOLUTE);
+	// SetSCurve(&TFRPRudder, TRPLEFT, 0, 0, 0, 0, 0);
+
+}
+
+//--------------------------------------------------------------------
+//	Warthog Throttle Mapping
+//--------------------------------------------------------------------
+int throttle_maps()
+{
+	// This function sets up the Thrustmaster Warthog
+	// throttle axis, switches and buttons
+	//
+    // Parameters:
+	//
+    // Returns:
+    
+	if (log_level > 0)
+		printf("... Initializing Throttle:\x0a");
+
+	// MIC switch + Push (thumb hat)	
+	MapKey(&Throttle, MSU, EXEC("if (isCameraModeOn) ActKey(KEYON + LookUp_Hold); else ActKey(KEYON + CommChannel_Toggle);"));
+	MapKeyR(&Throttle, MSU, EXEC("if (isCameraModeOn) ActKey(LookUp_Hold); else ActKey(CommChannel_Toggle);"));	
+	MapKey(&Throttle, MSD, EXEC("if (isCameraModeOn) ActKey(KEYON + LookDown_Hold); else ActKey(KEYON + MobiGlas_Toggle);"));
+	MapKeyR(&Throttle, MSD, EXEC("if (isCameraModeOn) ActKey(LookDown_Hold); else ActKey(MobiGlas_Toggle);"));
+	MapKey(&Throttle, MSR, EXEC("if (isCameraModeOn) ActKey(KEYON + LookRight_Hold); else ActKey(KEYON + CommChat_Toggle);"));
+	MapKeyR(&Throttle, MSR, EXEC("if (isCameraModeOn) ActKey(LookRight_Hold); else ActKey(CommChat_Toggle);"));
+	MapKey(&Throttle, MSL, EXEC("if (isCameraModeOn) ActKey(KEYON + LookLeft_Hold); else ActKey(KEYON + StarMap_Toggle);"));
+	MapKeyR(&Throttle, MSL, EXEC("if (isCameraModeOn) ActKey(LookLeft_Hold); else ActKey(StarMap_Toggle);"));
+	MapKey(&Throttle, MSP, EXEC("UnititalizedButton();"));
+
+	// Speed Brake (momentary-back + toggle-fwd)
+	MapKey(&Throttle, SPDF, CHAIN(Afterburner_Hold, D(), EXEC("BlinkAfterburner();")));
+	MapKeyR(&Throttle, SPDF, EXEC("StopAutoRepeat(AfterburnerRIDX);"));
+	MapKey(&Throttle, SPDB, CHAIN(SpaceBrake_Hold, D(), LED3_ON));
+	MapKeyR(&Throttle, SPDB, LED3_OFF);
+	
+	// Boat Switch (2-way toggle switch)
+	MapKeyIOUMD(&Throttle, BSB, 0, 0, 0, 0, ScanningMode_Toggle, ScanningMode_Toggle);
+	MapKeyRIOUMD(&Throttle, BSB, 0, 0, 0, 0, ScanningMode_Toggle, ScanningMode_Toggle);
+
+	// China Hat (Red rocker switch)	
+	MapKey(&Throttle, CHB, QuantumDrive_Press);
+	MapKeyR(&Throttle, CHB, QuantumDrive_Release);
+	MapKey(&Throttle, CHF, EXEC("UnititalizedButton();"));
+
+	// Pinky Switch
+	MapKey(&Throttle, PSB, CHAIN(CameraMode_ON, D(), EXEC("BlinkCameraMode(); isCameraModeOn=1;")));
+	MapKeyR(&Throttle, PSB, CHAIN(CameraMode_OFF, D(), EXEC("StopAutoRepeat(CameraModeRIDX); isCameraModeOn=0;")));
+	MapKey(&Throttle, PSF, EXEC("UnititalizedButton();"));
+	
+	// Left Throttle Button
+	MapKey(&Throttle, LTB, LookBack_Hold);
+
+	// Engine Fuel Flow (Left, Right) switches
+	MapKey(&Throttle, EFLNORM, CHAIN(Power_Systems_Toggle, D(), LEDsON, D(), LEDs50));
+	MapKeyR(&Throttle, EFLNORM, CHAIN(Power_Systems_Toggle, D(), LEDsON, D(), LEDs43));
+	MapKey(&Throttle, EFRNORM, Power_Engines_Toggle);
+	MapKeyR(&Throttle, EFRNORM, Power_Engines_Toggle);
+	
+	// Engine Operate (Left, Right) switches
+	MapKey(&Throttle, EOLIGN, Power_Weapons_Toggle);
+	MapKey(&Throttle, EOLMOTOR, Power_Weapons_Toggle);
+	MapKey(&Throttle, EORIGN, Power_Shields_Toggle);
+	MapKey(&Throttle, EORMOTOR, Power_Shields_Toggle);
+
+	// APU Start switch
+	MapKey(&Throttle, APUON, EXEC("ShipLightsToggle(1);"));
+	MapKeyR(&Throttle, APUON, EXEC("ShipLightsToggle(0);"));
+
+	// Landing Gear Horn button
+	MapKey(&Throttle, LDGH, Automatic_Landing);
+
+	// FLAPS
+	MapKey(&Throttle, FLAPU, EXEC("UnititalizedButton();"));
+	MapKey(&Throttle, FLAPD, EXEC("UnititalizedButton();"));
+
+	// EAC On/Off
+	MapKey(&Throttle, EACON, OpenAllDoors_Toggle); // UNMAPPED
+	MapKey(&Throttle, EACOFF, CloseAllDoors_Toggle); // UNMAPPED
+	
+	// RDR ALT (Normal Disable)
+	MapKey(&Throttle, RDRNRM, AITurrets_Toggle);
+	MapKeyR(&Throttle, RDRNRM, AITurrets_Toggle);
+
+	// Autopilot Engage Disengage
+	MapKey(&Throttle, APENG, LandingGear_Press);
+	MapKeyR(&Throttle, APENG, LandingGear_Release);
+	MapKey(&Throttle, APENG, EXEC("LandingModeToggle();"));
+	MapKeyR(&Throttle, APENG, 0);
+
+	// Autopilot Select Switch
+	MapKey(&Throttle, APPAT, CruiseControl_Toggle);
+	MapKeyR(&Throttle, APPAT, CruiseControl_Toggle);
+	MapKey(&Throttle, APALT, EXEC("UnititalizedButton();"));
+
+	// Right Engine Idle
+	MapKey(&Throttle, IDLERON, CHAIN(SpaceBrake_Hold, D(), LED3_ON));
+	MapKeyR(&Throttle, IDLERON, LED3_OFF);
+	
+	// Left Engine Idle
+	// MapKey(&Throttle, IDLELON, 0);
+	// MapKey(&Throttle, IDLELOFF, 0);
+
+	// Coolie Switch (Hat in front of throttle)
+	MapKey(&Throttle, CSU, Balance_Power);
+	MapKey(&Throttle, CSD, Increase_Power_Engines);
+	MapKey(&Throttle, CSR, Increase_Power_Shields);
+	MapKey(&Throttle, CSL, Increase_Power_Weapons);
+
+	// Slew Control *Mouse
+	MapKey(&Throttle, SC, SpeedLimit_Toggle); // Full Power
+	MapAxis(&Throttle, SCX, DX_XROT_AXIS, AXIS_NORMAL, MAP_ABSOLUTE);
+	SetSCurve(&Throttle, SCX, 0, 30, 0, 2, 0);
+	KeyAxis(&Throttle, SCY, '', AXMAP2(LIST(0, 40, 70), F10, 0, F9));
+	MapAxis(&Throttle, SCY, DX_YROT_AXIS, AXIS_REVERSED, MAP_ABSOLUTE);
+	SetSCurve(&Throttle, SCY, 0, 40, 0, 2, 0);
+	
+	// Throttle (Left, Right)
+	MapAxis(&Throttle, THR_RIGHT, DX_THROTTLE_AXIS, AXIS_REVERSED, MAP_ABSOLUTE);
+	SetSCurve(&Throttle, THR_RIGHT, 0, 0, 0, 0, 0);
+	MapAxis(&Throttle, THR_LEFT, 0, AXIS_NORMAL, MAP_ABSOLUTE);
+	SetSCurve(&Throttle, THR_LEFT, 0, 0, 0, 0, 0);
+
+	// Throttle Friction Control
+	MapAxis(&Throttle, THR_FC, DX_SLIDER_AXIS, AXIS_REVERSED, MAP_ABSOLUTE);
+	SetJCurve(&Throttle, THR_FC, 50, 50);
+}
+
+
+//--------------------------------------------------------------------
+//	Warthog Joystick Mappings
+//--------------------------------------------------------------------
+int joystick_maps()
+{
+	// This function sets up the Thrustmaster Warthog
+	// joystick axis, and buttons
+	//
+    // Parameters:
+	//
+    // Returns:
+    
+	if (log_level > 0)
+		printf("... Initializing Joystick:\x0a");
+
+	// Joystick Buttons
+	MapKey(&Joystick, TG1, FireGroup1_Press);
+	MapKeyR(&Joystick, TG1, FireGroup1_Release);
+	MapKey(&Joystick, TG2, FireCombined_Toggle);
+	MapKey(&Joystick, S2, FireGroup2_Press);
+	MapKeyR(&Joystick, S2, FireGroup2_Release);
+	MapKey(&Joystick, S3, Modifier_Press);
+	MapKeyR(&Joystick, S3, Modifier_Release);
+	MapKey(&Joystick, S4, EXEC("UnititalizedButton();"));
+
+	// Joystick Axis
+	MapAxis(&Joystick, JOYX, DX_X_AXIS, AXIS_NORMAL, MAP_ABSOLUTE);
+	SetSCurve(&Joystick, JOYX, 0, 0, 0, 2, 0);
+	MapAxis(&Joystick, JOYY, DX_Y_AXIS, AXIS_NORMAL, MAP_ABSOLUTE);
+	SetSCurve(&Joystick, JOYY, 0, 0, 0, 2, 0);
+}
+
+//--------------------------------------------------------------------
+//	Warthog Joystick HAT(1) Mapping
+//--------------------------------------------------------------------
+int hat_1_maps()
+{
+	// This function sets up the Thrustmaster Warthog
+	// joystick HAT switch one
+	//
+    // Parameters:
+	//
+    // Returns:
+    
+	if (log_level > 0)
+		printf("... Initializing Joystick HAT(1):\x0a");
+		
+	MapKeyUMD(&Joystick, H1U, Match_Target_Velocity, HailTarget_Toggle, MiningMode_Toggle);
+	MapKeyUMD(&Joystick, H1D, Decoupled_Toggle, TransmitComms_Toggle, MiningLaser_Toggle);
+	MapKeyUMD(&Joystick, H1L, TrackIRPause_Toggle, CommChannel_Toggle, MiningIncrease_Toggle);
+	MapKeyUMD(&Joystick, H1R, TrackIRRecenter_Toggle, StarMap_Toggle, MiningDecrease_Toggle);
+}
+
+//--------------------------------------------------------------------
+//	Warthog Joystick HAT(2) Mapping
+//--------------------------------------------------------------------
+int hat_2_maps()
+{
+	// This function sets up the Thrustmaster Warthog
+	// joystick HAT switch two
+	//
+    // Parameters:
+	//
+    // Returns:
+    
+	if (log_level > 0)
+		printf("... Initializing Joystick HAT(2):\x0a");
+	
+	MapKey(&Joystick, H2U, MissileLaunch_Hold); // Remaps to strafe forward when in landing mode
+	MapKey(&Joystick, H2D, MissileLock_Hold); 	// Remaps to strafe back when in landing mode
+	MapKey(&Joystick, H2L, MissilePatternOne);
+	MapKey(&Joystick, H2R, MissilePatternTwo);
+}
+
+//--------------------------------------------------------------------
+//	Warthog Joystick HAT(3) Mapping
+//--------------------------------------------------------------------
+int hat_3_maps()
+{
+	// This function sets up the Thrustmaster Warthog
+	// joystick HAT switch three
+	//
+    // Parameters:
+	//
+    // Returns:
+    
+	if (log_level > 0)
+		printf("... Initializing Joystick HAT(3):\x0a");
+
+    MapKeyUMD(&Joystick, H3U, CMSelect, StrafeUp_Hold, ScanningPing_Hold);
+    MapKeyUMD(&Joystick, H3D, CMLaunch, StrafeDown_Hold, ScanningActivate_Hold);
+    MapKeyUMD(&Joystick, H3R, CMPatternTwo, StrafeRight_Hold, ScanningDecrease_Hold);
+    MapKeyUMD(&Joystick, H3L, CMPatternOne, StrafeLeft_Hold, ScanningIncrease_Hold);
+}
+
+//--------------------------------------------------------------------
+//	Warthog Joystick HAT(4) Mapping
+//--------------------------------------------------------------------
+int hat_4_maps()
+{
+	// This function sets up the Thrustmaster Warthog
+	// joystick HAT switch four
+	//
+    // Parameters:
+	//
+    // Returns:
+    
+	if (log_level > 0)
+		printf("... Initializing Joystick HAT(4):\x0a");
+
+	MapKey(&Joystick, H4U, Cycle_Pinned_Toggle);
+	MapKey(&Joystick, H4R, Cycle_Friendly_Toggle);
+	MapKey(&Joystick, H4D, Target_Sub_System_Hold);
+	MapKey(&Joystick, H4L, Cycle_Hostiles_Toggle);
+	MapKey(&Joystick, H4P, ReticleFocus_Hold);
+}
+
+//--------------------------------------------------------------------
+//	Process ID's
+//--------------------------------------------------------------------
+int ReverseThrustRIDX = 0x0001;
+int AfterburnerRIDX = 0x0002;
+int CameraModeRIDX = 0x0001;
+
+//--------------------------------------------------------------------
+//	LED Functions
+//--------------------------------------------------------------------
+int Blink_LED(int led, int blinkrate)
+{
+	// This function will blink an LED
+	//
+    // Parameters:
+	//	int led: The Throttle LED to blink
+	//	int blinkrate: The rate at which to blink the LED
+	//
+    // Returns:
+		
+	ActKey(KEYON + CHAIN(LED(&Throttle, LED_ONOFF, LED_CURRENT + led), D(blinkrate), LED(&Throttle, LED_ONOFF, LED_CURRENT - led)));
+}
+
+int BlinkAfterburner()
+{
+	// This function will blink LED1 when the Afterburner toggle is on
+	//
+    // Parameters:
+	//
+    // Returns:
+    
+	ActKey(KEYON + StopAutoRepeat(AfterburnerRIDX));
+	ActKey(KEYON + REXEC(AfterburnerRIDX, 300, "Blink_LED(LED1, 150);", RNOSTOP));
+}
+
+int BlinkCameraMode()
+{
+	// This function will blink LED2 when in external camera view
+	//
+    // Parameters:
+	//
+    // Returns:
+    
+	ActKey(KEYON + StopAutoRepeat(CameraModeRIDX));
+	ActKey(KEYON + REXEC(CameraModeRIDX, 300, "Blink_LED(LED2, 150);", RNOSTOP));
+}
+    
+//--------------------------------------------------------------------
+//	Puts the ship into landing mode
+//--------------------------------------------------------------------
+int LandingModeToggle()
+{
+	// This function will toggle the landing gear, lights and
+	// remap the Joystick HAT(2) from missile to strafe and back
+	//
+    // Parameters:
+	//
+    // Returns:
+    
+	if (isLandingGearDown) {
+		ActKey(KEYON + LandingGear_Toggle);
+		ActKey(KEYON + LED5_OFF);
+		LandingLightsToggle(0);
+		MapKey(&Joystick, H2U, MissileLaunch_Hold);
+		MapKey(&Joystick, H2D, MissileLock_Hold);
+		if (log_level > 0)
+			printf(">>> Retract Landing Gear <<<\x0a");
+		
+	} else {		
+		ActKey(KEYON + LandingGear_Toggle);
+		ActKey(KEYON + LED5_ON);
+		LandingLightsToggle(1);
+		MapKey(&Joystick, H2U, StrafeForward_Hold);
+		MapKey(&Joystick, H2D, StrafeBack_Hold);
+		if (log_level > 0)
+			printf(">>> Deploy Landing Gear <<<\x0a");
+	}
+	
+	isLandingGearDown = !isLandingGearDown;
+}
+
+//--------------------------------------------------------------------
+//	Toggle Landing Lights
+//--------------------------------------------------------------------
+int LandingLightsToggle(int state)
+{
+	// This function will toggle the ship lights on with gear down and
+	// off with gear up. If the lights are on via the ShipLights toggle
+	// then operating the landing gear will change the lights state.
+	//
+    // Parameters:
+	//	int state: 1 for on, 0 for off
+	//
+    // Returns:
+    
+	if (state == 1) {
+		if (lightsOnBySwitch == 0) {			
+			ActKey(KEYON + Power_Lights_Toggle);
+			ActKey(KEYON + LED4_ON);
+			if (log_level > 0)
+				printf("... Landing lights are on\x0a");
+		}
+		lightsOnByGear = 1;
+		
+	} else if (state == 0) {
+		if (lightsOnBySwitch == 0) {
+			ActKey(KEYON + Power_Lights_Toggle);
+			ActKey(KEYON + LED4_OFF);
+			if (log_level > 0)
+				printf("... Landing lights are off\x0a");
+		}
+		lightsOnByGear = 0;
+	}
+}
+
+//--------------------------------------------------------------------
+//	Toggle Ship Lights
+//--------------------------------------------------------------------
+int ShipLightsToggle(int state)
+{
+	// This function will toggle ship lights via the ShipLights toggle.
+	// If the lights are on via the landing gear then operating the lights
+	// via toggle will not change the lights state.
+	//
+    // Parameters:
+	//	int state: 1 for on, 0 for off
+	//
+    // Returns:
+    
+	if (state == 1) {
+		if (lightsOnByGear == 0) {
+			ActKey(KEYON + Power_Lights_Toggle);
+			ActKey(KEYON + LED4_ON);
+			if (log_level > 0)
+				printf("... Exterior lights are on\x0a");
+		}
+		lightsOnBySwitch = 1;
+	} else if (state == 0) {
+		if (lightsOnByGear == 0) {			
+			ActKey(KEYON + Power_Lights_Toggle);
+			ActKey(KEYON + LED4_OFF);
+			if (log_level > 0)
+				printf("... Exterior lights are off\x0a");
+		}
+		lightsOnBySwitch = 0;
+	}
+}
+
+//--------------------------------------------------------------------
+//	LED Startup Illumination
+//--------------------------------------------------------------------
+int initializeLighting()
+{
+	// This function will automatically engage afterburner when the
+	// throttle is above 99% of its limit.
+	//
+    // Parameters:
+	//
+    // Returns:
+    
+	int count = 0;
+	
+	if (log_level > 0)
+		printf("... Initializing throttle lighting\x0a");
+
+	// Initialize LED status all "OFF"
+	ActKey(KEYON + LEDsOFF);
+	
+	// Christmas tree the L.E.D's
+	ActKey(KEYON + CHAIN(
+		D(), LED5_ON, D(delay_ms * count), LED5_OFF,
+		D(), LED4_ON, D(delay_ms * (count + 1)), LED4_OFF,
+		D(), LED3_ON, D(delay_ms * (count + 1)), LED3_OFF,
+		D(), LED2_ON, D(delay_ms * (count + 1)), LED2_OFF,
+		D(), LED1_ON, D(delay_ms * (count + 1)), LED1_OFF,
+		LEDsON, LEDs43)
+	);
+						 
+	// Set backlight brightness
+	// 0 to 42 is OFF
+    // 43 to 85 is level 1
+    // 86 to 128 is level 2
+    // 129 to 171 is level 3
+    // 172 to 214 is level 4
+    // 215 to 255 is level 5
+	
+    ActKey(PULSE+KEYON+LED(&Throttle, LED_INTENSITY, 50));
+}
+
+//--------------------------------------------------------------------
+// Auto-Load on Script Run
+//--------------------------------------------------------------------
+int initializeSoftware()
+{
+	// This function will spawn external applications needed for gaming.
+	//
+    // Parameters:
+	//
+    // Returns:
+	
+	if (log_level > 0)
+		printf("... Launching External Software\x0a");
+		
+	// system("spawn -w \"C:\\Program Files (x86)\\NaturalPoint\\TrackIR5\" \"C:\\Program Files (x86)\\NaturalPoint\\TrackIR5\\TrackIR5.exe\"");
+	// system("spawn -w \"C:\\Program Files (x86)\\Mumble\" \"C:\\Program Files (x86)\\Mumble\\mumble.exe\"");
+	// system("spawn -W \"D:\\Games\\RSI\" \"D:\\Games\\RSI\\RSI Launcher.exe\"");
+	
+}
+
+//--------------------------------------------------------------------
+// Prints out unbound button info
+//--------------------------------------------------------------------
+int UnititalizedButton()
+{
+	// This function will print a message for unbound buttons.
+	//
+    // Parameters:
+	//
+    // Returns:
+	
+	if (log_level > 0)
+		printf("This button has not been bound to any event\x0a");
+		
+}
+
+
+// END

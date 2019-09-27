@@ -1,0 +1,168 @@
+//-----------------------------------------------------------------------------
+//    Thrustmaster Warthog Script for Star Citizen 3.6.2
+//    Copyright (C) 2019 Kill Crazy
+//    
+//    This program is free software: you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation, either version 3 of the License, or
+//    (at your option) any later version.
+//
+//    This program is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU General Public License for more details.
+//
+//    You should have received a copy of the GNU General Public License
+//    along with this program.  If not, see <http://www.gnu.org/licenses/>
+//-----------------------------------------------------------------------------
+
+//----------------------------------------------------------------------------
+// LED macros
+//----------------------------------------------------------------------------
+define LEDsON                   LED(&Throttle, LED_ONOFF, LED_CURRENT + LED0)
+define LEDsOFF                  LED(&Throttle, LED_ONOFF, LED_CURRENT - LED0)
+define LEDs43                   LED(&Throttle, LED_INTENSITY, 43)
+define LEDs50                   LED(&Throttle, LED_INTENSITY, 50)
+define LED1_ON                  LED(&Throttle, LED_ONOFF, LED_CURRENT + LED1)
+define LED1_OFF                 LED(&Throttle, LED_ONOFF, LED_CURRENT - LED1)
+define LED2_ON                  LED(&Throttle, LED_ONOFF, LED_CURRENT + LED2)
+define LED2_OFF                 LED(&Throttle, LED_ONOFF, LED_CURRENT - LED2)
+define LED3_ON                  LED(&Throttle, LED_ONOFF, LED_CURRENT + LED3)
+define LED3_OFF                 LED(&Throttle, LED_ONOFF, LED_CURRENT - LED3)
+define LED4_ON                  LED(&Throttle, LED_ONOFF, LED_CURRENT + LED4)
+define LED4_OFF                 LED(&Throttle, LED_ONOFF, LED_CURRENT - LED4)
+define LED5_ON                  LED(&Throttle, LED_ONOFF, LED_CURRENT + LED5)
+define LED5_OFF                 LED(&Throttle, LED_ONOFF, LED_CURRENT - LED5)
+
+define Missile_Timer 2000
+
+//----------------------------------------------------------------------------
+// StarCitizen keybinding macros
+// 
+// xxx         	= 1 Pulsed Key Press / Single Action
+// xxx_Toggle  	= 1 Pulsed Key Press / Toggled action
+// xxx_Hold    	= Key is held down
+// xxx_Press    = Key is held down and requires a release event
+// xxx_Release	= Release Event for held key
+//----------------------------------------------------------------------------
+
+//----------------------------------------------------------------------------
+// Warthog Throttle Bindings
+//----------------------------------------------------------------------------
+
+// Power bindings
+define Power_Systems_Toggle    	PULSE + USB[0x18]	// u key
+define Power_Weapons_Toggle     PULSE + USB[0x13] 	// p key
+define Power_Shields_Toggle     PULSE + USB[0x12] 	// o key
+define Power_Lights_Toggle		PULSE + USB[0x17] 	// t key
+define Power_Engines_Toggle     PULSE + USB[0x0c] 	// i key
+define Increase_Power_Engines   USB[0x3e]			// F5 Key
+define Increase_Power_Shields   USB[0x3f] 			// F6 Key
+define Increase_Power_Weapons	USB[0x40] 			// F7 Key
+define Balance_Power			PULSE + USB[0x41] 	// F8 Key
+
+// Movement bindings
+define Decoupled_Toggle         PULSE + USB[0x19] 	// v key
+define SpeedLimit_Toggle		PULSE + USB[0x26] 	// 9 key
+define SpaceBrake_Hold          USB[0x1b] 			// x key
+define CruiseControl_Toggle     PULSE + USB[0x06] 	// c key
+define Afterburner_Hold         L_SHIFT				// Left shift key
+define Afterburner_Press        DOWN + L_SHIFT		// Left shift key
+define Afterburner_Release      UP + L_SHIFT		// Left shift key
+define QuantumDrive_Press       DOWN + USB[0x05] 	// b key
+define QuantumDrive_Release     UP + USB[0x05] 		// b key
+
+// Landing gear bindings
+define LandingGear_Press        DOWN + USB[0x11]	// n key
+define LandingGear_Release      UP + USB[0x11]		// n key
+define LandingGear_Toggle      	PULSE + USB[0x11]	// n key
+define Automatic_Landing		CHAIN(LandingGear_Press, D(1000), LandingGear_Release)
+
+// Camera view bindings
+define LookUp_Hold				L_CTL + USB[0x1a] 	// Left Control + w key
+define LookDown_Hold			L_CTL + USB[0x16] 	// Left Control + s key
+define LookLeft_Hold			L_CTL + USB[0x04] 	// Left Control + a key
+define LookRight_Hold			L_CTL + USB[0x07] 	// Left Control + d key
+define LookBack_Hold            USB[0x27] 			// 0 key
+define Freelook_Toggle          PULSE + USB[0x1d] 	// z Key
+define Camera_Toggle            PULSE + USB[0x3d] 	// F4 Key
+define CameraMode_ON            CHAIN(Camera_Toggle, D(60), Freelook_Toggle)
+define CameraMode_OFF           CHAIN(Freelook_Toggle, D(60), Camera_Toggle)
+
+// Miscellaneous bindings
+define AITurrets_Toggle         PULSE + USB[0x54]	// Forward Slash key
+define OpenAllDoors_Toggle		PULSE + USB[51]		// Simicolon key
+define CloseAllDoors_Toggle		PULSE + USB[52]		// Apostrophe key
+
+
+//----------------------------------------------------------------------------
+//	Warthog Joystick Bindings
+//----------------------------------------------------------------------------
+
+// Modifier bindings
+define Modifier_Press           DOWN + L_ALT		// Left Alt Key
+define Modifier_Release         UP + L_ALT			// Left Alt Key
+
+// Weapons bindings
+define FireGroup1_Hold			DX1					// DirectX Button 1
+define FireGroup2_Hold			DX2					// DirectX Button 2
+define FireGroup1_Press         DOWN + DX1			// DirectX Button 1
+define FireGroup1_Release       UP + DX1			// DirectX Button 1
+define FireGroup2_Press         DOWN + DX2			// DirectX Button 2
+define FireGroup2_Release       UP + DX2			// DirectX Button 2
+define MissileLaunch_Hold		DX5					// DirectX Button 5
+define MissileLock_Hold			DX29				// DirectX Button 29
+define FireCombined_Toggle      CHAIN(FireGroup1_Hold, D(), FireGroup2_Hold)
+define MissilePatternOne		CHAIN(DX29, D(1000), DX29)
+define MissilePatternTwo		CHAIN(DX29, D(1000), DX29, D(1000), DX29)
+
+// Targeting bindings
+define ReticleFocus_Hold        USB[0x1e] 			// 1 key
+define Target_Sub_System_Hold	USB[0x1f] 			// 2 key
+define Cycle_Hostiles_Toggle	PULSE + USB[0x20] 	// 3 key
+define Cycle_Pinned_Toggle		PULSE + USB[0x21] 	// 4 key
+define Cycle_Friendly_Toggle	PULSE + USB[0x22] 	// 5 key
+define TrackIRPause_Toggle      PULSE + USB[0x49]	// Insert key
+define TrackIRRecenter_Toggle   PULSE + USB[0x4c]	// Delete key
+// Target_Sub_System_Back		L_ALT + '2' 		// Uses joystick modifier S3
+// Target_Sub_System_Reset		HOLD + '2' 			// Press and hold
+// Cycle_Hostiles_Toggle_Back	L_ALT + '3' 		// Uses joystick modifier S3
+// Cycle_Pinned_Toggle_Back		L_ALT + '4'			// Uses joystick modifier S3
+// Cycle_Friendly_Toggle_Back	L_ALT + '5'			// Uses joystick modifier S3
+
+// Scanning and mining bindings
+define ScanningMode_Toggle		PULSE + TAB
+define ScanningPing_Hold		DX11				// DirectX Button 11
+define ScanningActivate_Hold	DX13				// DirectX Button 13
+define ScanningIncrease_Hold	DX14				// DirectX Button 14
+define ScanningDecrease_Hold	DX12				// DirectX Button 12
+define MiningMode_Toggle        PULSE + USB[0x10] 	// m key
+define MiningLaser_Toggle       PULSE + '0'			// USB[0x27] //Unmapped
+define MiningIncrease_Toggle    PULSE + '0'			// USB[0x27] //Unmapped
+define MiningDecrease_Toggle    PULSE + '0'			// USB[0x27] //Unmapped
+
+// Movement bindings
+define StrafeUp_Hold			SPC					// Space Bar
+define StrafeDown_Hold			L_CTL				// Left Control Key
+define StrafeLeft_Hold			USB[0x04]			// a key
+define StrafeRight_Hold			USB[0x07]			// d key
+define StrafeForward_Hold		USB[0x1a]			// w key
+define StrafeBack_Hold			USB[0x16]			// s key
+define Match_Target_Velocity	USB[0x25]			// 8 key
+
+// Countermeasure bindings
+define CMLaunch				    PULSE + USB[0x0a] 	// g key
+define CMSelect					PULSE + USB[0x0b] 	// h key
+define CMPatternOne				CHAIN(CMLaunch, D(10), CMSelect, D(550), CMLaunch)
+define CMPatternTwo				CHAIN(CMPatternOne, D(2000), CMPatternOne)
+
+// Mobiglas bindings
+define MobiGlas_Toggle			PULSE + F1			// USB[0x3a] //F1 key
+define HailTarget_Toggle		PULSE + USB[0x23] 	// 6 key
+define TransmitComms_Toggle		USB[87]				// ? Keyboard International1
+define CommChannel_Toggle		PULSE + USB[0x44] 	//F11 key
+define StarMap_Toggle			PULSE + USB[0x3b] 	//F2 key
+define CommChat_Toggle			PULSE + USB[0x45] 	//F12 key
+
+
+// END
